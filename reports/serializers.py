@@ -26,10 +26,13 @@ class ItemSerializer(serializers.ModelSerializer):
     display_latitude = serializers.SerializerMethodField()
     display_longitude = serializers.SerializerMethodField()
 
+    distance_km = serializers.SerializerMethodField()
+
     class Meta:
         model = Item
         fields = [
             "id",
+            "distance_km",
             "report_type",
             "category",
             "category_name",
@@ -45,6 +48,11 @@ class ItemSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "status", "created_at"]
+
+    def get_distance_km(self, obj):
+        if hasattr(obj, "distance") and obj.distance is not None:
+            return round(obj.distance.km, 2)
+        return None
 
     def get_display_latitude(self, obj):
         return obj.location_display.y if obj.location_display else None
