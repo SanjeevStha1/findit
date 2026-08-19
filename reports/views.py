@@ -5,6 +5,13 @@ from .serializers import ItemSerializer, CategorySerializer
 from .utils import fuzz_point
 from django.contrib.gis.measure import D  # D = Distance, a measurement helper
 from django.contrib.gis.db.models.functions import Distance
+from .serializers import ItemImageSerializer
+from .models import ItemImage
+import time
+import cloudinary.utils
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -80,3 +87,37 @@ class ItemDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == "GET":
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+
+
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def cloudinary_signature(request):
+    timestamp = int(time.time())
+    params_to_sign = {"timestamp": timestamp}
+
+    signature = cloudinary.utils.api_sign_request(
+        params_to_sign, cloudinary.config().api_secret
+    )
+
+    return Response({
+        "signature": signature,
+        "timestamp": timestamp,
+        "cloud_name": cloudinary.config().cloud_name,
+        "api_key": cloudinary.config().api_key,
+    })
+
+
+
+
+
+class ItemImageCreateView(generics.CreateAPIView):
+    serializer_class = ItemImageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        item = Item.objects.get(pk=self.kwargs["item_id"], user=self.request.user)
+        serializer.save(item=item)
+
