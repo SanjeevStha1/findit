@@ -24,6 +24,7 @@ class ItemListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Item.objects.filter(status="active").select_related("category").prefetch_related("images")
 
+        # --- Existing distance filter ---
         lat = self.request.query_params.get("lat")
         lng = self.request.query_params.get("lng")
         radius_km = self.request.query_params.get("radius_km")
@@ -38,7 +39,24 @@ class ItemListCreateView(generics.ListCreateAPIView):
                     distance=Distance("location", user_point)
                 ).order_by("distance")
             except (ValueError, TypeError):
-                pass  # invalid params — ignore filter, return unfiltered results
+                pass
+
+        # --- New filters ---
+        report_type = self.request.query_params.get("report_type")
+        if report_type in ("lost", "found"):
+            queryset = queryset.filter(report_type=report_type)
+
+        category_id = self.request.query_params.get("category")
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        date_from = self.request.query_params.get("date_from")
+        if date_from:
+            queryset = queryset.filter(item_date__gte=date_from)
+
+        date_to = self.request.query_params.get("date_to")
+        if date_to:
+            queryset = queryset.filter(item_date__lte=date_to)
 
         return queryset
 
