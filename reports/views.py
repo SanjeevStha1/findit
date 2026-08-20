@@ -12,6 +12,8 @@ import cloudinary.utils
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .serializers import RegisterSerializer
+from django.contrib.auth.models import User
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -113,6 +115,7 @@ def cloudinary_signature(request):
 
 
 
+
 class ItemImageCreateView(generics.CreateAPIView):
     serializer_class = ItemImageSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -121,3 +124,7 @@ class ItemImageCreateView(generics.CreateAPIView):
         item = Item.objects.get(pk=self.kwargs["item_id"], user=self.request.user)
         serializer.save(item=item)
 
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]

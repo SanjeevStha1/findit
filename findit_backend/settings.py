@@ -48,15 +48,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis',   # enables PostGIS/geographic support
-    'rest_framework',       # enables Django REST Framework
-    'reports',               # our app
+    'django.contrib.gis',
+    'corsheaders',           # ← new
+    'rest_framework',
+    'reports',
 ]
 
 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',      # ← new, must be high up
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -150,6 +152,10 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
 
 import cloudinary
 
