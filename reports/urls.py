@@ -11,6 +11,7 @@ from .views import (
 from .views import ClaimCreateView, MyClaimsView, ReceivedClaimsView, ClaimUpdateView
 from .views import get_matches_for_item
 from .views import NotificationListView, NotificationMarkReadView
+from .views import MyItemsView
 
 urlpatterns = [
     path("categories/", CategoryListView.as_view(), name="category-list"),
@@ -26,4 +27,6 @@ urlpatterns = [
     path("items/<int:item_id>/matches/", get_matches_for_item, name="item-matches"),
     path("notifications/", NotificationListView.as_view(), name="notifications-list"),
     path("notifications/<int:pk>/mark-read/", NotificationMarkReadView.as_view(), name="notification-mark-read"),
+    path("items/mine/", MyItemsView.as_view(), name="items-mine"),
+    
 ]
