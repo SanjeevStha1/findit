@@ -88,3 +88,9 @@ class ClaimSerializer(serializers.ModelSerializer):
             "verification_answer", "status", "created_at", "resolved_at",
         ]
         read_only_fields = ["id", "claimant", "item", "status", "created_at", "resolved_at"]
+
+class ClaimStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Claim
+        fields = ["id", "status", "resolved_at"]
+        read_only_fields = ["id", "resolved_at"]

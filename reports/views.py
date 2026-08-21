@@ -1,7 +1,7 @@
 from django.contrib.gis.geos import Point
 from rest_framework import generics, permissions
 from .models import Item, Category
-from .serializers import ItemSerializer, CategorySerializer
+from .serializers import ClaimStatusUpdateSerializer, ItemSerializer, CategorySerializer
 from .utils import fuzz_point
 from django.contrib.gis.measure import D  # D = Distance, a measurement helper
 from django.contrib.gis.db.models.functions import Distance
@@ -30,6 +30,7 @@ class ClaimCreateView(generics.CreateAPIView):
         serializer.save(claimant=self.request.user, item=item)
 
 
+
 class MyClaimsView(generics.ListAPIView):
     """Claims the logged-in user has submitted (as a claimant)."""
     serializer_class = ClaimSerializer
@@ -49,7 +50,7 @@ class ReceivedClaimsView(generics.ListAPIView):
 
 
 class ClaimUpdateView(generics.UpdateAPIView):
-    serializer_class = ClaimSerializer
+    serializer_class = ClaimStatusUpdateSerializer   # ← change this line only
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
