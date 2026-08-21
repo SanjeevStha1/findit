@@ -94,3 +94,23 @@ class Claim(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+class Match(models.Model):
+    class Status(models.TextChoices):
+        SUGGESTED = "suggested", "Suggested"
+        CONFIRMED = "confirmed", "Confirmed"
+        DISMISSED = "dismissed", "Dismissed"
+
+    lost_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="matches_as_lost")
+    found_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="matches_as_found")
+    score = models.FloatField()
+    score_breakdown = models.JSONField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.SUGGESTED)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-score"]
+        unique_together = ["lost_item", "found_item"]  # don't duplicate the same pair
+
+    def __str__(self):
+        return f"Match: Lost#{self.lost_item_id} <-> Found#{self.found_item_id} ({self.score:.2f})"

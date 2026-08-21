@@ -9,6 +9,8 @@ from .views import (
     RegisterView,
 )
 from .views import ClaimCreateView, MyClaimsView, ReceivedClaimsView, ClaimUpdateView
+from .views import get_matches_for_item
+
 
 urlpatterns = [
     path("categories/", CategoryListView.as_view(), name="category-list"),
@@ -21,4 +23,5 @@ urlpatterns = [
     path("claims/mine/", MyClaimsView.as_view(), name="claims-mine"),
     path("claims/received/", ReceivedClaimsView.as_view(), name="claims-received"),
     path("claims/<int:pk>/", ClaimUpdateView.as_view(), name="claim-update"),
+    path("items/<int:item_id>/matches/", get_matches_for_item, name="item-matches"),
 ]

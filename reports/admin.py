@@ -1,7 +1,13 @@
 from django.contrib import admin
 from .models import Category, Item, ItemImage
 from .models import Claim
+from .models import Match
 
+@admin.register(Match)
+class MatchAdmin(admin.ModelAdmin):
+    list_display = ["id", "lost_item", "found_item", "score", "status", "created_at"]
+    list_filter = ["status"]
+    
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ["name"]

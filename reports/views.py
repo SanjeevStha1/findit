@@ -18,6 +18,35 @@ from .models import Claim
 from .serializers import ClaimSerializer
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from .matching import save_matches_for_item
+from .models import Match
+from rest_framework.decorators import api_view, permission_classes as perm_classes
+from rest_framework.permissions import AllowAny
+
+
+class MatchSerializerMixin:
+    pass  # placeholder, we'll define the real serializer next
+
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def get_matches_for_item(request, item_id):
+    item = Item.objects.get(pk=item_id)
+    matches = save_matches_for_item(item)
+
+    data = []
+    for m in matches:
+        other = m.found_item if item.report_type == "lost" else m.lost_item
+        data.append({
+            "match_id": m.id,
+            "other_item_id": other.id,
+            "other_item_description": other.description,
+            "other_item_category": other.category.name,
+            "score": round(m.score, 3),
+            "score_breakdown": m.score_breakdown,
+            "status": m.status,
+        })
+    return Response(data)
 
 class ClaimCreateView(generics.CreateAPIView):
     serializer_class = ClaimSerializer
