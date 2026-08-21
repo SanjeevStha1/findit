@@ -22,7 +22,27 @@ from .matching import save_matches_for_item
 from .models import Match
 from rest_framework.decorators import api_view, permission_classes as perm_classes
 from rest_framework.permissions import AllowAny
+from .models import Notification
+from .serializers import NotificationSerializer
+from .models import Notification
 
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+
+class NotificationMarkReadView(generics.UpdateAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(is_read=True)
 
 class MatchSerializerMixin:
     pass  # placeholder, we'll define the real serializer next
@@ -79,15 +99,20 @@ class ReceivedClaimsView(generics.ListAPIView):
 
 
 class ClaimUpdateView(generics.UpdateAPIView):
-    serializer_class = ClaimStatusUpdateSerializer   # ← change this line only
+    serializer_class = ClaimStatusUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Only the finder (item owner) can update a claim's status
         return Claim.objects.filter(item__user=self.request.user)
 
     def perform_update(self, serializer):
-        serializer.save(resolved_at=timezone.now())
+        claim = serializer.save(resolved_at=timezone.now())
+        Notification.objects.create(
+            user=claim.claimant,
+            type=Notification.Type.CLAIM_UPDATE,
+            message=f"Your claim on '{claim.item.description[:60]}' was {claim.status}.",
+            related_item_id=claim.item.id,
+        )
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()

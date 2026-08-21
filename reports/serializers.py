@@ -3,6 +3,13 @@ from .models import Item, ItemImage, Category
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from .models import Claim
+from .models import Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "type", "message", "is_read", "related_item_id", "related_match_id", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

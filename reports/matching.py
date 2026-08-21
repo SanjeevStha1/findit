@@ -1,5 +1,6 @@
 from django.contrib.gis.measure import D
 from .models import Item, Match
+from .models import Notification
 
 # Weights for each factor — must sum to 1.0
 WEIGHT_CATEGORY = 0.25
@@ -104,10 +105,24 @@ def save_matches_for_item(item, top_n=10):
     candidates = find_candidates_for_item(item)[:top_n]
     saved = []
     for lost_item, found_item, score, breakdown in candidates:
-        match, _ = Match.objects.update_or_create(
+        match, created = Match.objects.update_or_create(
             lost_item=lost_item,
             found_item=found_item,
             defaults={"score": score, "score_breakdown": breakdown},
         )
         saved.append(match)
+
+        # Only notify on genuinely new, reasonably confident matches
+        if created and score >= 0.5:
+            for notify_user, other_item in [
+                (lost_item.user, found_item),
+                (found_item.user, lost_item),
+            ]:
+                Notification.objects.create(
+                    user=notify_user,
+                    type=Notification.Type.MATCH,
+                    message=f"A possible match was found for your report: {other_item.description[:60]}",
+                    related_item_id=other_item.id,
+                    related_match_id=match.id,
+                )
     return saved

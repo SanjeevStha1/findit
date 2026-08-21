@@ -114,3 +114,25 @@ class Match(models.Model):
 
     def __str__(self):
         return f"Match: Lost#{self.lost_item_id} <-> Found#{self.found_item_id} ({self.score:.2f})"
+
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        MATCH = "match", "New Match"
+        CLAIM_UPDATE = "claim_update", "Claim Update"
+        SYSTEM = "system", "System"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
+    )
+    type = models.CharField(max_length=20, choices=Type.choices)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    related_item_id = models.IntegerField(null=True, blank=True)
+    related_match_id = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Notification for {self.user}: {self.message[:40]}"
