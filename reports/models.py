@@ -71,3 +71,26 @@ class ItemImage(models.Model):
 
     def __str__(self):
         return f"Image for Item {self.item_id}"
+
+class Claim(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="claims")
+    claimant = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="claims"
+    )
+    verification_answer = models.TextField(
+        help_text="Claimant's proof/answer to verify ownership"
+    )
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Claim on Item {self.item_id} by {self.claimant}"
+
+    class Meta:
+        ordering = ["-created_at"]

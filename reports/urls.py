@@ -8,6 +8,7 @@ from .views import (
     cloudinary_signature,
     RegisterView,
 )
+from .views import ClaimCreateView, MyClaimsView, ReceivedClaimsView, ClaimUpdateView
 
 urlpatterns = [
     path("categories/", CategoryListView.as_view(), name="category-list"),
@@ -16,4 +17,8 @@ urlpatterns = [
     path("items/<int:item_id>/images/", ItemImageCreateView.as_view(), name="item-image-create"),
     path("cloudinary-signature/", cloudinary_signature, name="cloudinary-signature"),
     path("register/", RegisterView.as_view(), name="register"),
+    path("items/<int:item_id>/claim/", ClaimCreateView.as_view(), name="claim-create"),
+    path("claims/mine/", MyClaimsView.as_view(), name="claims-mine"),
+    path("claims/received/", ReceivedClaimsView.as_view(), name="claims-received"),
+    path("claims/<int:pk>/", ClaimUpdateView.as_view(), name="claim-update"),
 ]

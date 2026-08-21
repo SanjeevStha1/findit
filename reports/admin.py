@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Category, Item, ItemImage
-
+from .models import Claim
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -16,3 +16,8 @@ class ItemAdmin(admin.ModelAdmin):
 @admin.register(ItemImage)
 class ItemImageAdmin(admin.ModelAdmin):
     list_display = ["id", "item", "uploaded_at"]
+
+@admin.register(Claim)
+class ClaimAdmin(admin.ModelAdmin):
+    list_display = ["id", "item", "claimant", "status", "created_at"]
+    list_filter = ["status"]

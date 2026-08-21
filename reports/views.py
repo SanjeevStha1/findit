@@ -14,6 +14,50 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import RegisterSerializer
 from django.contrib.auth.models import User
+from .models import Claim
+from .serializers import ClaimSerializer
+from django.utils import timezone
+from rest_framework.exceptions import ValidationError
+
+class ClaimCreateView(generics.CreateAPIView):
+    serializer_class = ClaimSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        item = Item.objects.get(pk=self.kwargs["item_id"])
+        if item.user == self.request.user:
+            raise ValidationError("You cannot claim your own report.")
+        serializer.save(claimant=self.request.user, item=item)
+
+
+class MyClaimsView(generics.ListAPIView):
+    """Claims the logged-in user has submitted (as a claimant)."""
+    serializer_class = ClaimSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Claim.objects.filter(claimant=self.request.user)
+
+
+class ReceivedClaimsView(generics.ListAPIView):
+    """Claims submitted on items the logged-in user reported (as a finder)."""
+    serializer_class = ClaimSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Claim.objects.filter(item__user=self.request.user)
+
+
+class ClaimUpdateView(generics.UpdateAPIView):
+    serializer_class = ClaimSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only the finder (item owner) can update a claim's status
+        return Claim.objects.filter(item__user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(resolved_at=timezone.now())
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
