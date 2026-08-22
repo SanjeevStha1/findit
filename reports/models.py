@@ -35,6 +35,10 @@ class Item(models.Model):
         Category, on_delete=models.PROTECT, related_name="items"
     )
     description = models.TextField()
+    private_notes = models.TextField(
+        blank=True,
+        help_text="Private details only you can see — use this to verify claims (e.g. serial number, exact contents)."
+    )
     item_date = models.DateTimeField()
 
     # Exact location — used internally for accurate distance calculations

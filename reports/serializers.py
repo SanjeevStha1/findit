@@ -27,47 +27,42 @@ class ItemSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
     images = ItemImageSerializer(many=True, read_only=True)
     reported_by = serializers.CharField(source="user.username", read_only=True)
-
     latitude = serializers.FloatField(write_only=True)
     longitude = serializers.FloatField(write_only=True)
-
-    # New: readable output fields, sourced from the fuzzed location only
     display_latitude = serializers.SerializerMethodField()
     display_longitude = serializers.SerializerMethodField()
-
     distance_km = serializers.SerializerMethodField()
+    private_notes_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
         fields = [
-            "id",
-            "distance_km",
-            "report_type",
-            "category",
-            "category_name",
-            "description",
-            "item_date",
-            "status",
-            "latitude",
-            "longitude",
-            "display_latitude",
-            "display_longitude",
-            "images",
-            "reported_by",
-            "created_at",
+            "id", "report_type", "category", "category_name", "description",
+            "item_date", "status", "latitude", "longitude", "display_latitude",
+            "display_longitude", "distance_km", "images", "reported_by",
+            "created_at", "private_notes", "private_notes_display",
         ]
         read_only_fields = ["id", "status", "created_at"]
-
-    def get_distance_km(self, obj):
-        if hasattr(obj, "distance") and obj.distance is not None:
-            return round(obj.distance.km, 2)
-        return None
+        extra_kwargs = {
+            "private_notes": {"write_only": True},
+        }
 
     def get_display_latitude(self, obj):
         return obj.location_display.y if obj.location_display else None
 
     def get_display_longitude(self, obj):
         return obj.location_display.x if obj.location_display else None
+
+    def get_distance_km(self, obj):
+        if hasattr(obj, "distance") and obj.distance is not None:
+            return round(obj.distance.km, 2)
+        return None
+
+    def get_private_notes_display(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated and request.user == obj.user:
+            return obj.private_notes
+        return None
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])

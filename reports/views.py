@@ -25,6 +25,34 @@ from rest_framework.permissions import AllowAny
 from .models import Notification
 from .serializers import NotificationSerializer
 from .models import Notification
+from datetime import timedelta
+
+class ClaimCreateView(generics.CreateAPIView):
+    serializer_class = ClaimSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        item = Item.objects.get(pk=self.kwargs["item_id"])
+
+        if item.user == self.request.user:
+            raise ValidationError("You cannot claim your own report.")
+
+        answer = serializer.validated_data.get("verification_answer", "")
+        if len(answer.strip()) < 20:
+            raise ValidationError(
+                "Please provide more detail (at least 20 characters) to help verify ownership."
+            )
+
+        recent_claims = Claim.objects.filter(
+            claimant=self.request.user,
+            created_at__gte=timezone.now() - timedelta(hours=24),
+        ).count()
+        if recent_claims >= 5:
+            raise ValidationError(
+                "You've submitted several claims recently. Please wait before submitting more."
+            )
+
+        serializer.save(claimant=self.request.user, item=item)
 
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
@@ -68,15 +96,6 @@ def get_matches_for_item(request, item_id):
         })
     return Response(data)
 
-class ClaimCreateView(generics.CreateAPIView):
-    serializer_class = ClaimSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        item = Item.objects.get(pk=self.kwargs["item_id"])
-        if item.user == self.request.user:
-            raise ValidationError("You cannot claim your own report.")
-        serializer.save(claimant=self.request.user, item=item)
 
 
 
