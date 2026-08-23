@@ -28,6 +28,14 @@ from .models import Notification
 from datetime import timedelta
 from .embeddings import compute_text_embedding
 from .embeddings import compute_image_embedding
+from rest_framework.decorators import api_view, permission_classes as perm_classes_alt
+from rest_framework.permissions import IsAuthenticated as IsAuth
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def mark_all_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({"status": "ok"})
 
 class ClaimCreateView(generics.CreateAPIView):
     serializer_class = ClaimSerializer
