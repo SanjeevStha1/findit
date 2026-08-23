@@ -54,7 +54,14 @@ class ClaimCreateView(generics.CreateAPIView):
                 "You've submitted several claims recently. Please wait before submitting more."
             )
 
-        serializer.save(claimant=self.request.user, item=item)
+        claim = serializer.save(claimant=self.request.user, item=item)
+
+        Notification.objects.create(
+            user=item.user,
+            type=Notification.Type.CLAIM_UPDATE,
+            message=f"{self.request.user.username} submitted a claim on your item: {item.description[:60]}",
+            related_item_id=item.id,
+        )
 
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
