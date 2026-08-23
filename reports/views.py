@@ -26,6 +26,7 @@ from .models import Notification
 from .serializers import NotificationSerializer
 from .models import Notification
 from datetime import timedelta
+from .embeddings import compute_text_embedding
 
 class ClaimCreateView(generics.CreateAPIView):
     serializer_class = ClaimSerializer
@@ -192,10 +193,14 @@ class ItemListCreateView(generics.ListCreateAPIView):
         lng = serializer.validated_data.pop("longitude")
         point = Point(lng, lat, srid=4326)
 
+        description = serializer.validated_data.get("description", "")
+        embedding = compute_text_embedding(description)
+
         serializer.save(
             user=self.request.user,
             location=point,
-            location_display=fuzz_point(point),  # ← now actually fuzzed
+            location_display=fuzz_point(point),
+            text_embedding=embedding,
         )
 
 

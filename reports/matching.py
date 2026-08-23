@@ -1,6 +1,7 @@
 from django.contrib.gis.measure import D
 from .models import Item, Match
 from .models import Notification
+from .embeddings import cosine_similarity
 
 # Weights for each factor — must sum to 1.0
 WEIGHT_CATEGORY = 0.25
@@ -33,13 +34,17 @@ def score_date(lost, found):
 
 
 def score_text(lost, found):
+    if lost.text_embedding is not None and found.text_embedding is not None:
+        similarity = cosine_similarity(lost.text_embedding, found.text_embedding)
+        return max(0.0, similarity)  # cosine can be slightly negative; clamp to 0
+    # Fallback for items created before embeddings existed
     lost_words = set(lost.description.lower().split())
     found_words = set(found.description.lower().split())
     if not lost_words or not found_words:
         return 0.0
     overlap = lost_words & found_words
     union = lost_words | found_words
-    return len(overlap) / len(union)  # Jaccard similarity
+    return len(overlap) / len(union)
 
 
 def compute_match(lost, found):
