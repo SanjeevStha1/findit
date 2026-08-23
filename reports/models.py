@@ -93,6 +93,11 @@ class Claim(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
+    handoff_details = models.TextField(
+        blank=True,
+        help_text="Contact info / instructions the finder provides upon approval (phone, meeting spot, etc.)"
+    )
+
     def __str__(self):
         return f"Claim on Item {self.item_id} by {self.claimant}"
 

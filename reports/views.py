@@ -142,7 +142,12 @@ class ClaimUpdateView(generics.UpdateAPIView):
         return Claim.objects.filter(item__user=self.request.user)
 
     def perform_update(self, serializer):
+        new_status = serializer.validated_data.get("status")
+        if new_status == "approved" and not serializer.validated_data.get("handoff_details", "").strip():
+            raise ValidationError("Please provide contact details or instructions before approving.")
+
         claim = serializer.save(resolved_at=timezone.now())
+
         Notification.objects.create(
             user=claim.claimant,
             type=Notification.Type.CLAIM_UPDATE,

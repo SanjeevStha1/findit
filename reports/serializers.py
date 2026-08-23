@@ -82,17 +82,28 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ClaimSerializer(serializers.ModelSerializer):
     claimant_username = serializers.CharField(source="claimant.username", read_only=True)
     item_description = serializers.CharField(source="item.description", read_only=True)
+    claimant_email = serializers.SerializerMethodField()
+    finder_email = serializers.SerializerMethodField()
+    finder_username = serializers.CharField(source="item.user.username", read_only=True)
 
     class Meta:
         model = Claim
         fields = [
             "id", "item", "item_description", "claimant", "claimant_username",
             "verification_answer", "status", "created_at", "resolved_at",
+            "handoff_details", "claimant_email", "finder_email", "finder_username",
         ]
-        read_only_fields = ["id", "claimant", "item", "status", "created_at", "resolved_at"]
+        read_only_fields = ["id", "claimant", "item", "status", "created_at", "resolved_at", "handoff_details"]
 
+    def get_claimant_email(self, obj):
+        return obj.claimant.email if obj.status == "approved" else None
+
+    def get_finder_email(self, obj):
+        return obj.item.user.email if obj.status == "approved" else None
+
+    
 class ClaimStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Claim
-        fields = ["id", "status", "resolved_at"]
+        fields = ["id", "status", "resolved_at", "handoff_details"]
         read_only_fields = ["id", "resolved_at"]
