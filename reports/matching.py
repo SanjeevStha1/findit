@@ -47,10 +47,18 @@ def score_text(lost, found):
     return len(overlap) / len(union)
 
 
+WEIGHT_CATEGORY = 0.20
+WEIGHT_DISTANCE = 0.25
+WEIGHT_DATE = 0.15
+WEIGHT_TEXT = 0.20
+WEIGHT_IMAGE = 0.20
+
+
 def compute_match(lost, found):
     cat_score = score_category(lost, found)
     text_score = score_text(lost, found)
     date_score = score_date(lost, found)
+    image_score = score_image(lost, found)
 
     breakdown = {
         "category": round(cat_score, 3),
@@ -63,7 +71,16 @@ def compute_match(lost, found):
         + date_score * WEIGHT_DATE
         + text_score * WEIGHT_TEXT
     )
-    # Distance handled separately via DB query — see find_candidates()
+
+    if image_score is not None:
+        breakdown["image"] = round(image_score, 3)
+        overall += image_score * WEIGHT_IMAGE
+    else:
+        # No photos to compare — redistribute image's weight proportionally
+        # to the signals that ARE available, so missing photos don't just
+        # silently cap the max possible score.
+        overall = overall / (1 - WEIGHT_IMAGE)
+
     return overall, breakdown
 
 
@@ -131,3 +148,17 @@ def save_matches_for_item(item, top_n=10):
                     related_match_id=match.id,
                 )
     return saved
+
+def score_image(lost, found):
+    lost_images = lost.images.exclude(image_embedding__isnull=True)
+    found_images = found.images.exclude(image_embedding__isnull=True)
+
+    if not lost_images.exists() or not found_images.exists():
+        return None  # no photos to compare — don't penalize, just skip
+
+    best_score = 0.0
+    for li in lost_images:
+        for fi in found_images:
+            sim = cosine_similarity(li.image_embedding, fi.image_embedding)
+            best_score = max(best_score, sim)
+    return max(0.0, best_score)

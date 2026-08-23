@@ -27,6 +27,7 @@ from .serializers import NotificationSerializer
 from .models import Notification
 from datetime import timedelta
 from .embeddings import compute_text_embedding
+from .embeddings import compute_image_embedding
 
 class ClaimCreateView(generics.CreateAPIView):
     serializer_class = ClaimSerializer
@@ -245,7 +246,9 @@ class ItemImageCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         item = Item.objects.get(pk=self.kwargs["item_id"], user=self.request.user)
-        serializer.save(item=item)
+        image_url = serializer.validated_data.get("image_url")
+        embedding = compute_image_embedding(image_url)
+        serializer.save(item=item, image_embedding=embedding)
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
