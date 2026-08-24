@@ -33,6 +33,7 @@ class ItemSerializer(serializers.ModelSerializer):
     display_longitude = serializers.SerializerMethodField()
     distance_km = serializers.SerializerMethodField()
     private_notes_display = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
@@ -40,7 +41,7 @@ class ItemSerializer(serializers.ModelSerializer):
             "id", "report_type", "category", "category_name", "description",
             "item_date", "status", "latitude", "longitude", "display_latitude",
             "display_longitude", "distance_km", "images", "reported_by",
-            "created_at", "private_notes", "private_notes_display",
+            "created_at", "private_notes", "private_notes_display","is_owner",
         ]
         read_only_fields = ["id", "status", "created_at"]
         extra_kwargs = {
@@ -52,6 +53,10 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def get_display_longitude(self, obj):
         return obj.location_display.x if obj.location_display else None
+
+    def get_is_owner(self, obj):
+        request = self.context.get("request")
+        return bool(request and request.user.is_authenticated and request.user == obj.user)
 
     def get_distance_km(self, obj):
         if hasattr(obj, "distance") and obj.distance is not None:

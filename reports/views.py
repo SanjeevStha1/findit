@@ -37,6 +37,18 @@ def mark_all_notifications_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return Response({"status": "ok"})
 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def resolve_item(request, item_id):
+    try:
+        item = Item.objects.get(pk=item_id, user=request.user)
+    except Item.DoesNotExist:
+        return Response({"detail": "Not found or not yours."}, status=404)
+
+    item.status = "resolved"
+    item.save(update_fields=["status"])
+    return Response({"status": "resolved", "item_id": item.id})
+
 class ClaimCreateView(generics.CreateAPIView):
     serializer_class = ClaimSerializer
     permission_classes = [permissions.IsAuthenticated]
